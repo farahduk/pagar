@@ -17,11 +17,11 @@
         </tr>
         </thead>
         <tbody>
-        <tr>
+
 
     @if(!is_null($TransactionHistory))
         @foreach($TransactionHistory as $Transaction)
-
+            <tr>
             <div class="row">
                 <div class="column">
                     <td>
@@ -48,8 +48,9 @@
             <strong>Transaction History Empty!</strong>
         </div>
         <br />
+            </tr>
     @endif
-        </tr>
+
         </tbody>
     </table>
 
