@@ -101,7 +101,7 @@ class PagosController extends Controller
         $responseTransactionResult = $result->createTransactionResult;
 
         if ($responseTransactionResult->returnCode == "SUCCESS")
-        /*{
+        {
             $bankUrl = $responseTransactionResult->bankURL;
             $transactionID = $responseTransactionResult->transactionID;
 
@@ -110,7 +110,7 @@ class PagosController extends Controller
             Cache::put('transactionID', $transactionID, $expiresAt);
 
             return redirect($bankUrl);
-        }*/
+        }
         print var_dump($arguments);
         print var_dump($responseTransactionResult);
         return view('procesa', compact('title', 'people'));
