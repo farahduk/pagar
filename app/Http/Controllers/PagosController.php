@@ -108,8 +108,8 @@ class PagosController extends Controller
 
             return redirect($bankUrl);
         }
-        print var_dump($arguments);
-        print var_dump($responseTransactionResult);
+        //print var_dump($arguments);
+        //print var_dump($responseTransactionResult);
         return view('procesa', compact('title', 'people'));
     }
 

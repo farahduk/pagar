@@ -162,9 +162,8 @@
 
 
                         <div class="form-group text-center">
-                            <a href="/"><button class="btn btn-secondary" style="padding:8px 100px;margin-top:25px;">
-                                Atrás
-                            </button></a>
+                            <a href="{{url('/')}}" class="btn btn-secondary" style="padding:8px 100px;margin-top:25px;">Atrás
+                                </a>
                             <button type="submit" class="btn btn-primary" style="padding:8px 100px;margin-top:25px;">
                                 Pagar
                             </button>
