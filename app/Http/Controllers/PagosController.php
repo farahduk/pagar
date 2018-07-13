@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Mockery\Exception;
-use function PHPSTORM_META\type;
 use SoapClient;
 use Illuminate\Support\Facades\Cache;
 
@@ -18,34 +17,16 @@ use PlaceToPay\SDKPSE\SDKPSE;
 use PlaceToPay\SDKPSE\Structures\PSETransactionRequest;
 
 /**
- * @property SoapClient clientSOAP
+ * @property SoapClient client
  */
 class PagosController extends Controller
 {
-/*
-    // consulta con soap
+
     public function __construct()
     {
-        $this->clientSOAP = new SoapClient(config('app.pagowsdl'), array('trace' => true));
-        $this->clientSOAP->__setLocation(config('app.pagolocation'));
+        $this->client = new SoapClient(config('app.pagowsdl'), array('trace' => true));
+        $this->client->__setLocation(config('app.pagolocation'));
     }
-*/
-
-    /**
-     * $soapClient Contiene la instancia del objeto de \SoapClient
-     * @var \SoapClient
-     */
-    /*
-    private $soapClient;
-
-    function __construct($config)
-    {
-        $this->config = $config;
-        $this->soapClient =
-            new SoapClient(self::$WSDL, array('encoding' => self::$ENCODING));
-    }
-*/
-
 
     public function wahedGetBankList()
     {
@@ -57,6 +38,31 @@ class PagosController extends Controller
         //var_dump($banks);
     }
 
+    public function getBankList()
+    {
+        # tiempo de expiracion para cachear los bancos
+        $expiration = 86400; // 1 dia
+        # key asignado para cachear los bancos
+        $keyCache = 'bank_list';
+        # Obtener la lista de bancos que estan en la cache
+        $cache = new Cache($this->config['cache']);
+        $banks = $cache->get($keyCache);
+
+        if ($banks === false) {
+            try {
+                # Consumir el servicio para obtener las bancos
+                $result = $this->client->getBankList($this->auth());
+                $banks = $result->getBankListResult->item;
+                $cache->add($keyCache, $banks, $expiration);
+            } catch (Exception $e) {
+                Error::newException(
+                    'Error al obtener los bancos'
+                );
+            }
+        }
+
+        return is_array($banks) ? $banks : false;
+    }
 
 
 
@@ -71,6 +77,11 @@ class PagosController extends Controller
         //print gettype($bancas);
         $accounts = $this->accounts_array;
         $documentsType = $this->documentsType_array;
+        $arguments = array('auth' => self::authentication());
+        $resp = $this->client->__call('getBankList', array($arguments));
+        // pueba de datos de bancos
+        //echo var_dump($resp);
+        //echo var_dump($bancas);
         return view('muestra', compact('title','accounts','documentsType', 'bancas'));
     }
 
@@ -84,10 +95,86 @@ class PagosController extends Controller
         $title = 'procesa';
         //print gettype($bancas);
         $procesa = $this->wahedGetTransactionInformation($accountCode,$bankCode,$people);
+        $arguments = array('auth' => self::authentication(),'transaction' => ($procesa),   );
 
-        return view('showprocesa', compact('title', 'people'));
+        $result = $this->client->__call('createTransaction', array($arguments));
+        $responseTransactionResult = $result->createTransactionResult;
+
+        if ($responseTransactionResult->returnCode == "SUCCESS")
+        /*{
+            $bankUrl = $responseTransactionResult->bankURL;
+            $transactionID = $responseTransactionResult->transactionID;
+
+
+            $expiresAt = now()->addHour(1);
+            Cache::put('transactionID', $transactionID, $expiresAt);
+
+            return redirect($bankUrl);
+        }*/
+        print var_dump($arguments);
+        print var_dump($responseTransactionResult);
+        return view('procesa', compact('title', 'people'));
     }
 
+    /**
+     * Representa la visualización del historial de transacciones en el último día
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function recibeCosas(){
+
+        /**
+         * Titulo que tendrá la vista
+         * @var String $title */
+        $title = 'Result - Place to Pay';
+
+        $arguments = array(
+            'auth' => self::authentication(),
+            'transactionID' => Cache::get('transactionID'),
+        );
+
+        if (is_null($arguments['transactionID']))
+        {
+            $TransactionHistory = null;
+            return view('recibe', compact('title', 'TransactionHistory'));
+        }
+
+        $resp = $this->client->__call('getTransactionInformation', array($arguments));
+
+        $resp = $resp->getTransactionInformationResult;
+
+        /**
+         * Verificar si en Cache NO se tiene historial de transacciones
+         */
+        if (!Cache::has('TransactionHistory'))
+        {
+            /** Se almacena en Cache (por un dia) el registro de las transacciones */
+            $expiresAt = now()->addDay(1);
+            $TransactionHistory = array((string)$resp->transactionID => $resp);
+            Cache::put('TransactionHistory', $TransactionHistory,$expiresAt);
+        }
+        else
+        {
+            $TransactionHistory = Cache::get('TransactionHistory');
+
+
+            if (!array_key_exists((string)$resp->transactionID, $TransactionHistory))
+            {
+                /** Se almacena en Cache (por un dia) el registro de las transacciones */
+                $new_transaction = array((string)$resp->transactionID => $resp);
+                $TransactionHistory = $TransactionHistory + $new_transaction;
+                $expiresAt = now()->addDay(1);
+                Cache::put('TransactionHistory', $TransactionHistory,$expiresAt);
+            }
+        }
+
+        /** Se obtiene el historial de transacciones */
+        $TransactionHistory = Cache::get('TransactionHistory');
+        $title = 'recibe';
+        return view('recibe', compact('title','TransactionHistory'));
+
+
+    }
 
 
     private function getConfig()
@@ -170,7 +257,7 @@ class PagosController extends Controller
 
     public function wahedGetTransactionInformation($accountCode,$bankCode, $people)
     {
-        print("Obtener la informacion de una transacton\n");
+        //print("Obtener la informacion de una transacton\n");
 
         $obj = new SDKPSE($this->getConfig());
 
@@ -185,26 +272,27 @@ class PagosController extends Controller
         $buyer = $people;
         $shipping = $people;
 
-        $transaction = new PSETransactionRequest();
-        $transaction->bankCode = $bankCode;
-        $transaction->bankInterface = $accountCode;
-        $transaction->returnURL = '/final';
-        $transaction->reference = '2017-011212';
-        $transaction->description = 'Se realiza la compra de un pc';
-        $transaction->language = 'ES';
-        $transaction->currency = 'COP';
-        $transaction->totalAmount = 1500000;
-        $transaction->taxAmount = 200000;
-        $transaction->devolutionBase = 0;
-        $transaction->tipAmount = 0;
-        $transaction->payer = $payer;
-        $transaction->buyer = $buyer;
-        $transaction->shipping = $shipping;
-        $transaction->ipAddress = '10.10.1.12';
-        $transaction->userAgent =
+        $transaction = array();
+        $transaction["bankCode"] = $bankCode;
+        $transaction["bankInterface"] = $accountCode;
+        $transaction["returnURL"] = url('/recibe');
+        $transaction["reference"] = '2017-011212';
+        $transaction["description"] = 'Compra de PC';
+        $transaction["language"] = 'ES';
+        $transaction["currency"] = 'COP';
+        $transaction["totalAmount"] = 15000.3;
+        $transaction["taxAmount"] = 20.2;
+        $transaction["devolutionBase"] = 0.1;
+        $transaction["tipAmount"] = 0.1;
+        $transaction["payer"] = $payer;
+        //$transaction["buyer"] = $buyer;
+        $transaction["shipping"] = $shipping;
+        $transaction["ipAddress"] = '10.10.1.12';
+        $transaction["userAgent"] =
             'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0)Gecko/20100101 Firefox/50.0';
-        $transaction->additionalData = array();
-
+        //$transaction->additionalData = array();
+        return $transaction;
+/*
         $result = $obj->createTransaction($transaction);
         $this->assertTrue(gettype($result) == 'object');
         print('transactionID: ' . $result->transactionID . "\n");
@@ -216,6 +304,26 @@ class PagosController extends Controller
         # Obtener la informacion de la transaccion
         $info = $obj->getTransactionInformation($result->transactionID);
         $this->assertTrue(gettype($info) == 'object');
-        $this->assertTrue($info->transactionID == $result->transactionID);
+        $this->assertTrue($info->transactionID == $result->transactionID); */
+
+   }
+
+    private function authentication ()
+    {
+        $login = config('app.pagologin');
+        $tranKey = config('app.pagoKey');
+
+        //  Generación de la semilla
+        $seed = date('c');
+
+        $tranKey = sha1($seed.$tranKey);
+
+        $auth = array(
+            'login' => $login,
+            'tranKey' => $tranKey,
+            'seed' => $seed,
+        );
+
+        return $auth;
     }
 }

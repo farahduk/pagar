@@ -9,14 +9,14 @@
         @if( true || Auth::check() )
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item {{ Request::is('catalog') && ! Request::is('catalog/create')? 'active' : ''}}">
-                        <a class="nav-link" href="{{url('/catalog')}}">
+                    <li class="nav-item {{ Request::is('recibe') && ! Request::is('catalog/create')? 'active' : ''}}">
+                        <a class="nav-link" href="{{url('/recibe')}}">
                             <span class="glyphicon glyphicon-film" aria-hidden="true"></span>
                             Listar pagos
                         </a>
                     </li>
-                    <li class="nav-item {{  Request::is('catalog/create') ? 'active' : ''}}">
-                        <a class="nav-link" href="{{url('/catalog/create')}}">
+                    <li class="nav-item {{  Request::is('prueba') ? 'active' : ''}}">
+                        <a class="nav-link" href="{{url('/prueba')}}">
                             <span>&#10010</span> Nuevo pago
                         </a>
                     </li>
