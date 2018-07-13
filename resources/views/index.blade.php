@@ -13,8 +13,8 @@
                 <a class="nav-link" href="{{url('/prueba')}}">
 
 
-                <img src="{{ url('/assets/img/pse.png') }}"><br>
-                <h2>Pagar</h2></a>
+                    <img src="{{ url('/assets/img/pse.png') }}"><br>
+                    <h2>Pagar</h2></a>
             </div>
 
         </div>

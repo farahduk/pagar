@@ -65,9 +65,6 @@ class PagosController extends Controller
     }
 
 
-
-
-
     public function muestraCosas(){
 
         //$obj = new PagosController;
@@ -264,14 +261,9 @@ class PagosController extends Controller
         # Crear una transaccion
 
         # Obtener el codigo del banco [bankCode]
-
-
-
-
         $payer = $people;
         $buyer = $people;
         $shipping = $people;
-
         $transaction = array();
         $transaction["bankCode"] = $bankCode;
         $transaction["bankInterface"] = $accountCode;
@@ -292,21 +284,21 @@ class PagosController extends Controller
             'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:50.0)Gecko/20100101 Firefox/50.0';
         //$transaction->additionalData = array();
         return $transaction;
-/*
-        $result = $obj->createTransaction($transaction);
-        $this->assertTrue(gettype($result) == 'object');
-        print('transactionID: ' . $result->transactionID . "\n");
-        print('sessionID: ' . $result->sessionID . "\n");
-        print('returnCode: ' . $result->returnCode . "\n");
-        print('bankURL: ' . $result->bankURL . "\n");
-        print('responseReasonText: ' . $result->responseReasonText . "\n");
+        /*
+                $result = $obj->createTransaction($transaction);
+                $this->assertTrue(gettype($result) == 'object');
+                print('transactionID: ' . $result->transactionID . "\n");
+                print('sessionID: ' . $result->sessionID . "\n");
+                print('returnCode: ' . $result->returnCode . "\n");
+                print('bankURL: ' . $result->bankURL . "\n");
+                print('responseReasonText: ' . $result->responseReasonText . "\n");
 
-        # Obtener la informacion de la transaccion
-        $info = $obj->getTransactionInformation($result->transactionID);
-        $this->assertTrue(gettype($info) == 'object');
-        $this->assertTrue($info->transactionID == $result->transactionID); */
+                # Obtener la informacion de la transaccion
+                $info = $obj->getTransactionInformation($result->transactionID);
+                $this->assertTrue(gettype($info) == 'object');
+                $this->assertTrue($info->transactionID == $result->transactionID); */
 
-   }
+    }
 
     private function authentication ()
     {
