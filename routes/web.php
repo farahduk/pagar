@@ -18,5 +18,5 @@ Route::get('/prueba', 'PagosController@muestraCosas');
 Route::post('/procesa', 'PagosController@procesaCosas');
 
 
-Route::post('/recibe', 'PagosController@recibeCosas');
+Route::get('/recibe', 'PagosController@recibeCosas');
 

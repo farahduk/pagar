@@ -5,27 +5,41 @@
 @section('content')
 
     <div class="title2 m-b-md">
-        Transaction Results (Last day)
+        <h2>Listado de transacciones</h2>
     </div>
+    <table class="table">
+        <thead class="thead-light">
+        <tr>
+            <th>ID:</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th>Respuesta</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
 
     @if(!is_null($TransactionHistory))
         @foreach($TransactionHistory as $Transaction)
+
             <div class="row">
                 <div class="column">
-                    <strong>ID:</strong>
-                    {{ $Transaction->transactionID }}
+                    <td>
+                    {{ $Transaction->transactionID }}</td>
                 </div>
                 <div class="column">
-                    <strong>Estado:</strong>
-                    {{ $Transaction->transactionState }}
+                    <td>
+                    {{ $Transaction->transactionState }}</td>
                 </div>
                 <div class="column">
-                    <strong>Fecha:</strong>
+                    <td>
                     {{ $Transaction->requestDate }}
+                    </td>
                 </div>
                 <div class="column">
-                    <strong>Respuesta:</strong>
+                    <td>
                     {{ $Transaction->responseReasonText }}
+                    </td>
                 </div>
             </div>
         @endforeach
@@ -35,7 +49,17 @@
         </div>
         <br />
     @endif
-    <a href="{{ url('/') }}" class="button">Regresar</a>
+        </tr>
+        </tbody>
+    </table>
+
+
+    <div class="form-group text-center">
+        <a href="/"><button class="btn btn-secondary" style="padding:8px 100px;">
+                Atrás
+            </button></a>
+
+        </button> </div>
 
 
 
